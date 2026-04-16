@@ -1,0 +1,168 @@
+{
+  "name": "Stock Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=NVDA&apikey=",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "d254f05c-cf10-4681-bfb9-9ab79fe1a487",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=NVDA+stock&hl=en-US&gl=US&ceid=US:en",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "",
+      "name": "RSS Read",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        832,
+        80
+      ],
+      "id": "2dcc511f-5060-4cab-bdb9-6d54f197525d",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=🚀 NVDA Quant Intelligence Report\nMarket Status: Active\nAnalysis Date: {{ $('Code in Python').item.json.analysis_date }}\n\nMathematical Findings:\n\nLatest Price: ${{ $('Code in Python').item.json.latest_close }}\n\nProbability of UP move: {{ $('Code in Python').item.json.logistic_prob_up *100}}%\nDirectional Signal: {{ $('Code in Python').item.json.classification }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        80
+      ],
+      "id": "2ccd51e5-f279-486f-b313-157dee3445ad",
+      "name": "Discord",
+      "webhookId": "",
+      "executeOnce": true,
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "",
+          "name": "Discord Webhook account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        48,
+        0
+      ],
+      "id": "7c104ca6-7dcd-4a87-b6ae-6141c1132936",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# 1. Parse data directly from your API node\ntime_series = _items[0][\"json\"][\"Time Series (Daily)\"]\n\n# 2. Extract and sort prices chronologically\nsorted_dates = sorted(time_series.keys())\nprices = [float(time_series[d][\"4. close\"]) for d in sorted_dates]\n\n# 3. Logistic Regression setup\n# We want to predict if 'tomorrow' is GREEN (1) or RED (0)\n# based on the historical pattern in your specific JSON.\nX = list(range(len(prices)))\ny = [1 if prices[i] > prices[i-1] else 0 for i in range(1, len(prices))]\nX_train = X[1:] # Align lengths\n\n# 4. Manual Sigmoid & Training (No math/sklearn imports)\nE = 2.718281828\n\ndef sigmoid(z):\n    if z > 10: return 0.9999\n    if z < -10: return 0.0001\n    return 1 / (1 + (E ** -z))\n\nintercept, slope = 0.0, 0.0\nlearning_rate = 0.01\n\n# Training loop\nfor _ in range(500):\n    for i in range(len(y)):\n        pred = sigmoid(intercept + (slope * X_train[i]))\n        error = y[i] - pred\n        intercept += learning_rate * error\n        slope += learning_rate * error * X_train[i]\n\n# 5. Result for the current day (April 16, 2026)\nprob_up = sigmoid(intercept + (slope * len(prices)))\n\nreturn [{\n    \"json\": {\n        \"ticker\": \"NVDA\",\n        \"analysis_date\": \"2026-04-16\",\n        \"latest_close\": prices[-1],\n        \"logistic_prob_up\": round(prob_up, 4),\n        \"classification\": \"BULLISH_TREND\" if prob_up > 0.5 else \"BEARISH_DIVERGENCE\",\n        \"note\": \"Calculated via manual Gradient Descent in n8n sandbox.\"\n    }\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "5c39ae6a-ff54-46d7-8e27-0635ccadab53",
+      "name": "Code in Python"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in Python",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in Python": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "859711a1-8180-4be3-b9a3-485b30c26b96",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "71238f7d31b6983489b372d9e26793a9efab008be2e0d1e068ce5a28a6b1b844"
+  },
+  "id": "3F2IkB2QNo9al6a2",
+  "tags": []
+}
