@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GovTech Patient Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .gradient-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .gradient-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .card-shadow {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .report-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-left: 5px solid #667eea;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .success-icon {
+            animation: bounce 0.6s ease-in-out;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .error-banner {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="text-center text-white mb-8">
+            <h1 class="text-5xl font-bold mb-2">
+                <i class="fas fa-heartbeat text-red-400 mr-3"></i>Patient Portal
+            </h1>
+            <p class="text-lg opacity-90">Ministry of Health & IT - Secure Health Records</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Register Card -->
+            <div class="glass-effect rounded-2xl p-8 card-shadow">
+                <div class="flex items-center mb-6">
+                    <div class="bg-blue-100 p-4 rounded-full mr-4">
+                        <i class="fas fa-id-card text-blue-600 text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Register Card</h2>
+                </div>
+                
+                <p class="text-gray-600 mb-6">Add your health card to the secure cloud system</p>
+                
+                <input 
+                    id="saveHC" 
+                    type="text" 
+                    placeholder="Enter Health Card Number" 
+                    class="w-full p-4 border-2 border-gray-200 rounded-lg mb-4 focus:border-blue-500 focus:outline-none transition"
+                >
+                
+                <button 
+                    onclick="saveData()" 
+                    class="gradient-btn w-full text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2"
+                >
+                    <i class="fas fa-cloud-upload-alt"></i> Save to Cloud
+                </button>
+                
+                <div id="saveStatus" class="mt-4 text-center text-sm font-semibold hidden"></div>
+            </div>
+
+            <!-- Retrieve Card -->
+            <div class="glass-effect rounded-2xl p-8 card-shadow">
+                <div class="flex items-center mb-6">
+                    <div class="bg-green-100 p-4 rounded-full mr-4">
+                        <i class="fas fa-file-medical text-green-600 text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">View Report</h2>
+                </div>
+                
+                <p class="text-gray-600 mb-6">Retrieve your blood report from cloud storage</p>
+                
+                <input 
+                    id="getHC" 
+                    type="text" 
+                    placeholder="Enter Card Number" 
+                    class="w-full p-4 border-2 border-gray-200 rounded-lg mb-4 focus:border-green-500 focus:outline-none transition"
+                >
+                
+                <button 
+                    onclick="getData()" 
+                    class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:shadow-lg transition"
+                >
+                    <i class="fas fa-search"></i> View My Report
+                </button>
+                
+                <div id="reportStatus" class="mt-4 text-center text-sm font-semibold hidden"></div>
+            </div>
+        </div>
+
+        <!-- Report Display -->
+        <div id="reportContainer" class="mt-8 hidden">
+            <div class="glass-effect rounded-2xl p-8 card-shadow">
+                <div class="flex items-center mb-6">
+                    <i class="fas fa-check-circle text-green-500 text-3xl mr-4 success-icon"></i>
+                    <h3 class="text-2xl font-bold text-gray-800">Blood Report</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="stat-box">
+                        <i class="fas fa-droplet text-2xl mb-2"></i>
+                        <p class="text-sm opacity-90">Blood Type</p>
+                        <p class="text-2xl font-bold" id="bloodType">A+</p>
+                    </div>
+                    <div class="stat-box">
+                        <i class="fas fa-vial text-2xl mb-2"></i>
+                        <p class="text-sm opacity-90">Status</p>
+                        <p class="text-2xl font-bold" id="reportStatus">Normal</p>
+                    </div>
+                    <div class="stat-box">
+                        <i class="fas fa-calendar text-2xl mb-2"></i>
+                        <p class="text-sm opacity-90">Last Updated</p>
+                        <p class="text-lg font-bold" id="lastUpdated">Today</p>
+                    </div>
+                </div>
+                
+                <div class="report-card rounded-lg p-6 mb-6">
+                    <h4 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <i class="fas fa-notes-medical text-blue-600"></i> Medical Details
+                    </h4>
+                    <p id="reportDetails" class="text-gray-700 leading-relaxed"></p>
+                </div>
+                
+                <button 
+                    onclick="closeReport()" 
+                    class="w-full bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 rounded-lg transition"
+                >
+                    <i class="fas fa-times"></i> Close Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Error Banner -->
+        <div id="errorBanner" class="mt-8 error-banner rounded-2xl p-6 text-white hidden card-shadow">
+            <div class="flex items-center gap-4">
+                <i class="fas fa-exclamation-circle text-2xl"></i>
+                <div>
+                    <h4 class="font-bold text-lg">Error</h4>
+                    <p id="errorMessage"></p>
+                </div>
+                <button onclick="closeError()" class="ml-auto text-2xl hover:opacity-70">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-white mt-12 text-sm opacity-75">
+            <p><i class="fas fa-lock text-green-400 mr-2"></i>Your data is encrypted and secure</p>
+        </div>
+    </div>
+
+    <script>
+        const API = "https://576hwwma5a.execute-api.us-east-2.amazonaws.com/manage";
+
+        async function saveData() {
+            const hc = document.getElementById('saveHC').value;
+            if (!hc) {
+                showError("Please enter a Health Card Number");
+                return;
+            }
+            
+            try {
+                const statusDiv = document.getElementById('saveStatus');
+                statusDiv.classList.remove('hidden');
+                statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
+                statusDiv.className = 'mt-4 text-center text-sm font-semibold text-blue-600';
+                
+                const res = await fetch(API, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ healthCard: hc })
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    statusDiv.innerHTML = '<i class="fas fa-check-circle mr-2 text-green-600"></i> Registered Successfully!';
+                    statusDiv.className = 'mt-4 text-center text-sm font-semibold text-green-600';
+                    document.getElementById('saveHC').value = '';
+                    setTimeout(() => statusDiv.classList.add('hidden'), 3000);
+                } else {
+                    showError(data.error || 'Failed to save');
+                }
+            } catch (err) {
+                showError(err.message);
+            }
+        }
+
+        async function getData() {
+            const hc = document.getElementById('getHC').value;
+            if (!hc) {
+                showError("Please enter a Health Card Number");
+                return;
+            }
+            
+            try {
+                const statusDiv = document.getElementById('reportStatus');
+                statusDiv.classList.remove('hidden');
+                statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Retrieving...';
+                statusDiv.className = 'mt-4 text-center text-sm font-semibold text-blue-600';
+                
+                const res = await fetch(`${API}?healthCard=${encodeURIComponent(hc)}`);
+                const data = await res.json();
+                
+                if (res.ok && data.BloodReport) {
+                    displayReport(data);
+                    statusDiv.classList.add('hidden');
+                } else {
+                    showError(data.message || data.error || "No record found");
+                    statusDiv.classList.add('hidden');
+                }
+            } catch (err) {
+                showError(err.message);
+            }
+        }
+
+        function displayReport(data) {
+            document.getElementById('bloodType').textContent = data.BloodReport.split('-')[1]?.trim() || 'A+';
+            document.getElementById('reportStatus').textContent = data.BloodReport.split('-')[0]?.trim() || 'Normal';
+            document.getElementById('lastUpdated').textContent = new Date(data.LastUpdated).toLocaleDateString();
+            document.getElementById('reportDetails').textContent = data.BloodReport;
+            
+            document.getElementById('reportContainer').classList.remove('hidden');
+            document.getElementById('reportContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function closeReport() {
+            document.getElementById('reportContainer').classList.add('hidden');
+            document.getElementById('getHC').value = '';
+        }
+
+        function showError(message) {
+            const errorBanner = document.getElementById('errorBanner');
+            document.getElementById('errorMessage').textContent = message;
+            errorBanner.classList.remove('hidden');
+            setTimeout(() => errorBanner.classList.add('hidden'), 5000);
+        }
+
+        function closeError() {
+            document.getElementById('errorBanner').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

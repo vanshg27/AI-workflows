@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM Security Scanner</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔒 Prompt Security Scanner</h1>
+      <p class="subtitle">Check before you send</p>
+    </div>
+
+    <div class="input-section">
+      <textarea 
+        id="promptInput" 
+        placeholder="Paste your prompt here..."
+        rows="6"></textarea>
+      <div class="button-group">
+        <button id="scanBtn" class="btn btn-primary">Scan Prompt</button>
+        <button id="clearBtn" class="btn btn-secondary">Clear</button>
+      </div>
+    </div>
+
+    <div id="loading" class="loading" style="display:none;">
+      <div class="spinner"></div>
+      <p>Scanning...</p>
+    </div>
+
+    <div id="results" class="results" style="display:none;">
+      <div id="riskBanner" class="risk-banner"></div>
+      <div id="findings" class="findings"></div>
+      <div class="action-buttons">
+        <button id="proceedBtn" class="btn btn-secondary" style="display:none;">
+          Proceed Anyway
+        </button>
+        <button id="redactBtn" class="btn btn-info" style="display:none;">
+          Show Redaction
+        </button>
+        <button id="newScanBtn" class="btn btn-secondary">
+          New Scan
+        </button>
+      </div>
+    </div>
+
+    <div id="empty" class="empty-state">
+      <p>👋 Paste a prompt to scan for sensitive data</p>
+    </div>
+
+    <div class="footer">
+      <p>v0.1.0 • LLM Security Scanner</p>
+    </div>
+  </div>
+
+  <script src="pii-detector.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

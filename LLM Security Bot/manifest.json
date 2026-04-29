@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "LLM Prompt Security Scanner",
+  "version": "0.1.0",
+  "description": "Scan prompts for sensitive data before sending to LLMs",
+  "permissions": [
+    "scripting",
+    "activeTab",
+    "clipboardRead"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Scan Prompt",
+    "default_icons": {
+      "16": "images/icon-16.png",
+      "48": "images/icon-48.png",
+      "128": "images/icon-128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chat.openai.com/*",
+        "https://*.openai.com/*",
+        "https://claude.ai/*",
+        "https://*.claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://chatgpt.com/*",
+        "https://perplexity.ai/*"
+      ],
+      "js": ["pii-detector.js", "content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "host_permissions": [
+    "https://chat.openai.com/*",
+    "https://*.openai.com/*",
+    "https://claude.ai/*",
+    "https://*.claude.ai/*",
+    "https://gemini.google.com/*",
+    "https://chatgpt.com/*",
+    "https://perplexity.ai/*"
+  ]
+}
