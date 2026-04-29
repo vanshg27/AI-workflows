@@ -46,22 +46,72 @@ function setupRealtimeDetection() {
   }
 
   if (textarea) {
-    console.log('📝 Setting up listener on:', textarea);
-    
-    const handleInput = debounce(() => {
-      const text = textarea.value || textarea.textContent || textarea.innerText;
-      console.log('📝 Input detected:', text.substring(0, 50) + '...');
-      
-      const result = detector.scan(text);
-      console.log('🔍 Scan result:', result.risk_level, result.finding_count);
-      
-      if (result.risk_level !== 'LOW') {
-        showWarningBanner(result);
-      } else {
-        hideWarningBanner();
-      }
-    }, 500);
+    const elemInfo = `${textarea.tagName.toLowerCase()}#${textarea.id || '(no-id)'}${textarea.className ? '.' + textarea.className.toString().replace(/\s+/g, '.') : ''}`;
+    console.log('📝 Setting up listener on:', elemInfo);
 
+    // Handler will check that the element is still connected before using it
+    function rawHandler() {
+      try {
+        if (!textarea || !textarea.isConnected) {
+          console.warn('⚠️ Monitored element detached, reinitializing detection');
+          // Remove previous listeners if any
+          if (textarea && textarea._pii_handler) {
+            textarea.removeEventListener('input', textarea._pii_handler);
+            textarea.removeEventListener('change', textarea._pii_handler);
+            textarea.removeEventListener('keyup', textarea._pii_handler);
+            try { delete textarea._pii_handler; } catch (e) {}
+          }
+          // Re-run setup to find a fresh element
+          setupRealtimeDetection();
+          return;
+        }
+
+        const text = textarea.value || textarea.textContent || textarea.innerText || '';
+        console.log('📝 Input detected:', text.substring(0, 50) + '...');
+
+        const result = detector.scan(text);
+        console.log('🔍 Scan result:', result.risk_level, result.finding_count);
+
+        if (result.risk_level === 'CRITICAL' || result.risk_level === 'HIGH') {
+          // Show banner, then immediately navigate away to a safe page
+          showWarningBanner(result);
+
+          // Prevent multiple navigations
+          if (!window.__pii_exit_triggered) {
+            window.__pii_exit_triggered = true;
+            try {
+              // Brief delay to ensure banner renders in case user sees it
+              setTimeout(() => {
+                // Navigate the current tab to a blank safe page
+                window.location.replace('about:blank');
+              }, 150);
+            } catch (err) {
+              console.error('Failed to navigate away:', err);
+            }
+          }
+        } else if (result.risk_level !== 'LOW') {
+          // For MEDIUM show banner but don't navigate away
+          showWarningBanner(result);
+        } else {
+          hideWarningBanner();
+        }
+      } catch (err) {
+        console.error('Error in PII detector handler:', err);
+      }
+    }
+
+    const handleInput = debounce(rawHandler, 500);
+
+    // Remove old handler if present
+    try {
+      if (textarea._pii_handler) {
+        textarea.removeEventListener('input', textarea._pii_handler);
+        textarea.removeEventListener('change', textarea._pii_handler);
+        textarea.removeEventListener('keyup', textarea._pii_handler);
+      }
+    } catch (e) {}
+
+    textarea._pii_handler = handleInput;
     textarea.addEventListener('input', handleInput);
     textarea.addEventListener('change', handleInput);
     textarea.addEventListener('keyup', handleInput);
